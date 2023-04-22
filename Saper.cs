@@ -40,35 +40,27 @@ namespace praktik_07._04._2023
             field = new cell[height, width];
 
             Random r = new Random();
-            //while (true)
-            //{
-            //    for (int i = 0; i < mines; i++)
-            //    {
-            //        int row;
-            //        int column;
+            while (true)
+            {
+                for (int i = 0; i < mines; i++)
+                {
+                    int row;
+                    int column;
 
-            //        while (true)
-            //        {
-            //            row = r.Next(rows);
-            //            column = r.Next(columns);
-            //            if (!field[row, column].bombed)
-            //            {
-            //                field[row, column].bombed = true;//place a bomb if cell isn't bombed
-            //                break;
-            //            }
-            //        }
-            //    }
+                    while (true)
+                    {
+                        row = r.Next(rows);
+                        column = r.Next(columns);
+                        if (!field[row, column].bombed)
+                        {
+                            field[row, column].bombed = true;//place a bomb if cell isn't bombed
+                            break;
+                        }
+                    }
+                }
 
-            //    if (safeField()) break;
-            //}
-
-            field[1, 0].bombed = true;
-            field[1, 1].bombed = true;
-            field[2, 1].bombed = true;
-            field[3, 0].bombed = true;
-            field[3, 1].bombed = true;
-
-            Console.WriteLine($"safe field: {safeField()}");
+                if (safeField()) break;
+            }
         }
         private void move(int i, int j)
         {
