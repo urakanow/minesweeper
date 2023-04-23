@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,29 +47,10 @@ namespace praktik_07._04._2023
                 for (int j = 0; j < columns; j++)
                     field[i, j] = new cell(false);
 
-            Random r = new Random();
-            while (true)
-            {
-                for (int i = 0; i < mines; i++)
-                {
-                    int row;
-                    int column;
+        }
 
-                    while (true)
-                    {
-                        row = r.Next(rows);
-                        column = r.Next(columns);
-                        if (!field[row, column].bombed)
-                        {
-                            field[row, column].bombed = true;//place a bomb if cell isn't bombed
-                            break;
-                        }
-                    }
-                }
-
-                if (safeField()) break;
-            }
-
+        private void countMines()
+        {
             for (int i = 0; i < rows; i++)
             {
                 for (int j = 0; j < columns; j++)
@@ -85,7 +67,6 @@ namespace praktik_07._04._2023
                                 {
                                     if (field[i + i1, j + j1].bombed)
                                         field[i, j].surrounded++;
-                                    //counting the bombs
                                 }
                                 catch (IndexOutOfRangeException)
                                 {
@@ -98,8 +79,64 @@ namespace praktik_07._04._2023
             }
         }
 
+        private void placeMines(int avoidedRow, int avoidedColumn)
+        {
+            Random r = new Random();
+            while (true)
+            {
+                for (int i = 0; i < mines; i++)
+                {
+                    int row;
+                    int column;
+
+                    while (true)
+                    {
+                        row = r.Next(rows);
+                        column = r.Next(columns);
+                        if (Math.Abs(row - avoidedRow) <= 1 &&
+                            Math.Abs(column - avoidedColumn) <= 1)
+                            continue;
+                        if (!field[row, column].bombed)
+                        {
+                            field[row, column].bombed = true;//place a bomb if cell isn't bombed
+                            break;
+                        }
+                    }
+                }
+
+                if (safeField()) break;
+            }
+        }
+
         public void play()
         {
+            display();
+
+            int startRow = default;
+            int startColumn = default;
+            try
+            {
+                while (true)
+                {
+                    Console.WriteLine("cell:");
+                    string cell = Console.ReadLine();
+                    startRow = Convert.ToInt32(cell.Substring(1)) - 1;
+                    if (startRow < 0 || startRow >= rows) throw new Exception("wrong row");
+
+                    startColumn= (int)cell[0] - 97;
+                    if (startColumn < 0 || startColumn >= columns) throw new Exception("wrong column");
+                    break;
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            placeMines(startRow, startColumn);
+            countMines();
+
+            dig(startRow, startColumn);
             display();
 
             while (true)
@@ -113,7 +150,7 @@ namespace praktik_07._04._2023
                     {
                         try
                         {
-                            Console.WriteLine("1 - dig\n2 - flag\n3 - back");
+                            Console.WriteLine("1 - dig\n2 - flag/unflag\n3 - back");
                             if (!int.TryParse(Console.ReadLine(), out index))
                                 throw new Exception("not a number");
 
@@ -140,7 +177,13 @@ namespace praktik_07._04._2023
 
                     if (loseCheck())
                     {
-                        Console.WriteLine("you lost");
+                        Thread.Sleep(1000);
+                        for (int i = 0; i < rows; i++)
+                            for (int j = 0; j < columns; j++)
+                                if(field[i, j].bombed) field[i, j].displayed = '*';
+                        display();
+
+                        Console.WriteLine("you lose");
                         break;
                     }
 
@@ -165,8 +208,9 @@ namespace praktik_07._04._2023
             int column = (int)cell[0] - 97;
             if (column < 0 || column >= columns) throw new Exception("wrong column");
 
-            field[row, column].flagged = true;
-            field[row, column].displayed = '&';
+            field[row, column].flagged = !field[row, column].flagged;
+            field[row, column].displayed = field[row, column].displayed == '?' ? '&' : '?';
+            //set or remove the flag
 
             display();
         }
