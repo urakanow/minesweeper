@@ -21,15 +21,11 @@ namespace praktik_07._04._2023
             surrounded = 0;
         }
 
-        public bool open() {
+        public void open() {
             if (bombed)
-            {
                 displayed = '*';
-                return false;
-            }
             else if (surrounded != 0) displayed = Convert.ToChar(surrounded.ToString());
             else displayed = ' ';
-            return true;
         }
     }
 
@@ -102,17 +98,45 @@ namespace praktik_07._04._2023
             }
         }
 
+        public void play()
+        {
+            display();
+
+            while (true)
+            {
+                try
+                {
+                    Console.WriteLine("cell:");
+                    string answer = Console.ReadLine();
+                    move(answer);
+                    if(loseCheck())
+                    {
+                        Console.WriteLine("you lost");
+                        break;
+                    }
+
+                    if(winCheck())
+                    {
+                        Console.WriteLine("you win!");
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
         private void move(int i, int j)
         {
             if (field[i, j].displayed != '?') throw new Exception("already opened");
 
-            if (!field[i, j].open()) Console.WriteLine("game over");
+            //if (!field[i, j].open()) Console.WriteLine("game over");
+
+            field[i, j].open();
 
             if (field[i, j].surrounded == 0 && !field[i, j].bombed)
-            {
-                field[i, j].open();
                 openEmpty(i, j);
-            }
             else
             {
                 for (int i1 = -1; i1 <= 1; i1++)
@@ -182,11 +206,21 @@ namespace praktik_07._04._2023
 
         private bool winCheck()
         {
-            return false;
+            int bombsGuessed = 0;
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < columns; j++)
+                    if (field[i, j].displayed == '?' || field[i, j].displayed == '&') 
+                        bombsGuessed++;
+
+            return bombsGuessed == mines;
         }
 
         private bool loseCheck()
         {
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < columns; j++)
+                    if (field[i, j].displayed == '*') return true;
+
             return false;
         }
 

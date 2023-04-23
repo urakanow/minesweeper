@@ -16,19 +16,6 @@
 
 using praktik_07._04._2023;
 
-Saper saper = new Saper(10, 10, 15);
-saper.display();
+Saper saper = new Saper(6, 6, 5);
+saper.play();
 
-while(true)
-{
-    try
-    {
-        Console.WriteLine("cell:");
-        string answer = Console.ReadLine();
-        saper.move(answer);
-    }
-    catch(Exception ex)
-    {
-        Console.WriteLine(ex.Message);
-    }
-}
