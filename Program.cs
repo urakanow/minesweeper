@@ -16,6 +16,9 @@
 
 using praktik_07._04._2023;
 
-Minesweeper saper = new Minesweeper(6, 6, 5);
-saper.play();
+int rows = 6;
+int columns = 6;
+Minesweeper minesweeper = new Minesweeper(6, 6, 5);
+
+minesweeper.play();
 
