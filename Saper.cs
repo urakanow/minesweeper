@@ -29,13 +29,13 @@ namespace praktik_07._04._2023
         }
     }
 
-    internal class Saper 
+    internal class Minesweeper 
     {
         cell[,] field;
         int rows;
         int columns;
         int mines;
-        public Saper(int height, int width, int mines)
+        public Minesweeper(int height, int width, int mines)
         {
             rows = height;
             columns = width;
@@ -107,15 +107,44 @@ namespace praktik_07._04._2023
                 try
                 {
                     Console.WriteLine("cell:");
-                    string answer = Console.ReadLine();
-                    move(answer);
-                    if(loseCheck())
+                    string chosenCell = Console.ReadLine();
+                    int index;
+                    while (true)
+                    {
+                        try
+                        {
+                            Console.WriteLine("1 - dig\n2 - flag\n3 - back");
+                            if (!int.TryParse(Console.ReadLine(), out index))
+                                throw new Exception("not a number");
+
+                            if (index < 1 || index > 3)
+                                throw new Exception("must be between 1 and 3");
+
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+                    }
+                    switch (index)
+                    {
+                        case 1:
+                            dig(chosenCell);
+                            break;
+                        case 2:
+                            flag(chosenCell);
+                            break;
+                    }
+
+
+                    if (loseCheck())
                     {
                         Console.WriteLine("you lost");
                         break;
                     }
 
-                    if(winCheck())
+                    if (winCheck())
                     {
                         Console.WriteLine("you win!");
                         break;
@@ -127,7 +156,22 @@ namespace praktik_07._04._2023
                 }
             }
         }
-        private void move(int i, int j)
+
+        private void flag(string cell)
+        {
+            int row = Convert.ToInt32(cell.Substring(1)) - 1;
+            if (row < 0 || row >= rows) throw new Exception("wrong row");
+
+            int column = (int)cell[0] - 97;
+            if (column < 0 || column >= columns) throw new Exception("wrong column");
+
+            field[row, column].flagged = true;
+            field[row, column].displayed = '&';
+
+            display();
+        }
+        
+        private void dig(int i, int j)
         {
             if (field[i, j].displayed != '?') throw new Exception("already opened");
 
@@ -190,7 +234,7 @@ namespace praktik_07._04._2023
             }
         }
 
-        public void move(string cell)
+        public void dig(string cell)
         {
             
             int row = Convert.ToInt32(cell.Substring(1)) - 1; 
@@ -199,7 +243,7 @@ namespace praktik_07._04._2023
             int column = (int)cell[0] - 97;
             if (column < 0 || column >= columns) throw new Exception("wrong column");
 
-            move(row, column);
+            dig(row, column);
 
             display();
         }

@@ -16,6 +16,6 @@
 
 using praktik_07._04._2023;
 
-Saper saper = new Saper(6, 6, 5);
+Minesweeper saper = new Minesweeper(6, 6, 5);
 saper.play();
 
