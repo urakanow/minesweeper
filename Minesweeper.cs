@@ -348,7 +348,7 @@ namespace praktik_07._04._2023
 
         private bool SafeField()
         {
-            ConnectedCells(0, 0);//placing the flags in every accesible cell
+            ConnectedCells(0, 0);//placing flags in every accesible cell
 
             int flaggedCount = 0;//how many cells are accesible
             for (int i = 0; i < rows; i++)
