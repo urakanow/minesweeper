@@ -22,7 +22,8 @@ namespace praktik_07._04._2023
             surrounded = 0;
         }
 
-        public void open() {
+        public void Open()
+        {
             if (bombed)
                 displayed = '*';
             else if (surrounded != 0) displayed = Convert.ToChar(surrounded.ToString());
@@ -30,26 +31,47 @@ namespace praktik_07._04._2023
         }
     }
 
-    internal class Minesweeper 
+    internal class Minesweeper
     {
+        private Dictionary<int, ConsoleColor> colors = new Dictionary<int, ConsoleColor>(){
+            { 1, ConsoleColor.DarkBlue },
+            { 2, ConsoleColor.Green },
+            { 3, ConsoleColor.Red },
+            { 4, ConsoleColor.Magenta },
+            { 5, ConsoleColor.Yellow },
+            { 6, ConsoleColor.Blue },
+            { 7, ConsoleColor.Black },
+            };
         cell[,] field;
-        int rows;
-        int columns;
-        int mines;
+        int rows { get; }
+        int columns { get; }
+        int mines { get; }
+        int placedFlags;
         public Minesweeper(int height, int width, int mines)
         {
             rows = height;
             columns = width;
             this.mines = mines;
+            placedFlags = 0;
             field = new cell[height, width];
 
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < columns; j++)
                     field[i, j] = new cell(false);
-
         }
 
-        private void countMines()
+        private (int, int) CellToIndexes(string cell)
+        {
+            int row = Convert.ToInt32(cell.Substring(1)) - 1;
+            if (row < 0 || row >= rows) throw new Exception("wrong row");
+
+            int column = (int)cell[0] - 97;
+            if (column < 0 || column >= columns) throw new Exception("wrong column");
+
+            return (row, column);
+        }
+
+        private void CountMines()
         {
             for (int i = 0; i < rows; i++)
             {
@@ -79,7 +101,7 @@ namespace praktik_07._04._2023
             }
         }
 
-        private void placeMines(int avoidedRow, int avoidedColumn)
+        private void PlaceMines(int avoidedRow, int avoidedColumn)
         {
             Random r = new Random();
             while (true)
@@ -104,13 +126,13 @@ namespace praktik_07._04._2023
                     }
                 }
 
-                if (safeField()) break;
+                if (SafeField()) break;
             }
         }
 
-        public void play()
+        public void Play()
         {
-            display();
+            Display();
 
             int startRow = default;
             int startColumn = default;
@@ -120,24 +142,21 @@ namespace praktik_07._04._2023
                 {
                     Console.WriteLine("cell:");
                     string cell = Console.ReadLine();
-                    startRow = Convert.ToInt32(cell.Substring(1)) - 1;
-                    if (startRow < 0 || startRow >= rows) throw new Exception("wrong row");
-
-                    startColumn= (int)cell[0] - 97;
-                    if (startColumn < 0 || startColumn >= columns) throw new Exception("wrong column");
+                    startRow = CellToIndexes(cell).Item1;
+                    startColumn = CellToIndexes(cell).Item2;
                     break;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
 
-            placeMines(startRow, startColumn);
-            countMines();
+            PlaceMines(startRow, startColumn);
+            CountMines();
 
-            dig(startRow, startColumn);
-            display();
+            Dig(startRow, startColumn);
+            Display();
 
             while (true)
             {
@@ -167,27 +186,30 @@ namespace praktik_07._04._2023
                     switch (index)
                     {
                         case 1:
-                            dig(chosenCell);
+                            Dig(chosenCell);
                             break;
                         case 2:
-                            flag(chosenCell);
+                            Flag(chosenCell);
+                            break;
+                        case 3:
+                            Display();
                             break;
                     }
 
 
-                    if (loseCheck())
+                    if (LoseCheck())
                     {
                         Thread.Sleep(1000);
                         for (int i = 0; i < rows; i++)
                             for (int j = 0; j < columns; j++)
-                                if(field[i, j].bombed) field[i, j].displayed = '*';
-                        display();
+                                if (field[i, j].bombed) field[i, j].displayed = '*';
+                        Display();
 
                         Console.WriteLine("you lose");
                         break;
                     }
 
-                    if (winCheck())
+                    if (WinCheck())
                     {
                         Console.WriteLine("you win!");
                         break;
@@ -200,47 +222,55 @@ namespace praktik_07._04._2023
             }
         }
 
-        private void flag(string cell)
+        private void Flag(string cell)
         {
-            int row = Convert.ToInt32(cell.Substring(1)) - 1;
-            if (row < 0 || row >= rows) throw new Exception("wrong row");
+            int row = CellToIndexes(cell).Item1;
+            int column = CellToIndexes(cell).Item2;
 
-            int column = (int)cell[0] - 97;
-            if (column < 0 || column >= columns) throw new Exception("wrong column");
+            for (int i = 0; i < rows; i++)
+                for (int j = 0; j < columns; j++)
+                
+
+            if (field[row, column].displayed != '?' && field[row, column].displayed != '&')
+                throw new Exception("already opened");
 
             field[row, column].flagged = !field[row, column].flagged;
             field[row, column].displayed = field[row, column].displayed == '?' ? '&' : '?';
             //set or remove the flag
+            if (field[row, column].displayed == '?') placedFlags--;
+            else placedFlags++;
 
-            display();
+            Display();
         }
-        
-        private void dig(int i, int j)
+
+        private void Dig(int row, int column)
         {
-            if (field[i, j].displayed != '?') throw new Exception("already opened");
+            if (field[row, column].displayed != '?') {
+                if (field[row, column].displayed != '&')
+                    throw new Exception("already opened");
+                else placedFlags--;
+            }
 
-            //if (!field[i, j].open()) Console.WriteLine("game over");
+                field[row, column].Open();
 
-            field[i, j].open();
-
-            if (field[i, j].surrounded == 0 && !field[i, j].bombed)
-                openEmpty(i, j);
+            if (field[row, column].surrounded == 0 && !field[row, column].bombed)
+                OpenEmpty(row, column);
             else
             {
-                for (int i1 = -1; i1 <= 1; i1++)
+                for (int i = -1; i <= 1; i++)
                 {
-                    for (int j1 = -1; j1 <= 1; j1++)
+                    for (int j = -1; j <= 1; j++)
                     {
-                        if (j == 0 && i == 0) continue;
+                        if (column == 0 && row == 0) continue;
 
                         try
                         {
-                            if (field[i + i1, j + j1].surrounded == 0 && !field[i + i1, j + j1].bombed)
+                            if (field[row + i, column + j].surrounded == 0 && !field[row + i, column + j].bombed)
                             {
-                                field[i + i1, j + j1].open();
-                                openEmpty(i + i1, j + j1);
+                                field[row + i, column + j].Open();
+                                OpenEmpty(row + i, column + j);
                             }
-                                
+
                         }
                         catch (IndexOutOfRangeException)
                         {
@@ -251,7 +281,18 @@ namespace praktik_07._04._2023
             }
         }
 
-        private void openEmpty(int row, int column)
+        public void Dig(string cell)
+        {
+
+            int row = CellToIndexes(cell).Item1;
+            int column = CellToIndexes(cell).Item2;
+
+            Dig(row, column);
+
+            Display();
+        }
+
+        private void OpenEmpty(int row, int column)
         {
             for (int i = -1; i <= 1; i++)
             {
@@ -263,10 +304,10 @@ namespace praktik_07._04._2023
                     {
                         if (field[row + i, column + j].displayed == '?' && !field[row + i, column + j].bombed)
                         {
-                            field[row + i, column + j].open();//open if hidden
+                            field[row + i, column + j].Open();//open if hidden
 
                             if (field[row + i, column + j].surrounded == 0 && !field[row + i, column + j].bombed)
-                                openEmpty(row + i, column + j);
+                                OpenEmpty(row + i, column + j);
                             //proceed to the cell if it's empty
                         }
                     }
@@ -278,32 +319,25 @@ namespace praktik_07._04._2023
             }
         }
 
-        public void dig(string cell)
+        private bool WinCheck()
         {
-            
-            int row = Convert.ToInt32(cell.Substring(1)) - 1; 
-            if (row < 0 || row >= rows) throw new Exception("wrong row");
-
-            int column = (int)cell[0] - 97;
-            if (column < 0 || column >= columns) throw new Exception("wrong column");
-
-            dig(row, column);
-
-            display();
-        }
-
-        private bool winCheck()
-        {
-            int bombsGuessed = 0;
+            int minesGuessed = 0;
+            int hidden = 0;
             for (int i = 0; i < rows; i++)
+            {
                 for (int j = 0; j < columns; j++)
-                    if (field[i, j].displayed == '?' || field[i, j].displayed == '&') 
-                        bombsGuessed++;
+                {
+                    if (field[i, j].displayed == '&' && field[i, j].bombed)
+                        minesGuessed++;
+                    if (field[i, j].displayed == '?')
+                        hidden++;
+                }
+            }
 
-            return bombsGuessed == mines;
+            return minesGuessed == mines || minesGuessed + hidden == mines;
         }
 
-        private bool loseCheck()
+        private bool LoseCheck()
         {
             for (int i = 0; i < rows; i++)
                 for (int j = 0; j < columns; j++)
@@ -312,9 +346,9 @@ namespace praktik_07._04._2023
             return false;
         }
 
-        private bool safeField()
+        private bool SafeField()
         {
-            connectedCells(0, 0);//placing the flags in every accesible cell
+            ConnectedCells(0, 0);//placing the flags in every accesible cell
 
             int flaggedCount = 0;//how many cells are accesible
             for (int i = 0; i < rows; i++)
@@ -332,7 +366,7 @@ namespace praktik_07._04._2023
             return flaggedCount == rows * columns - mines;
         }
 
-        private void connectedCells(int row, int column)
+        private void ConnectedCells(int row, int column)
         {
             for (int i = -1; i <= 1; i++)
             {
@@ -346,7 +380,7 @@ namespace praktik_07._04._2023
                             && !field[row + i, column + j].flagged)
                         {
                             field[row + i, column + j].flagged = true;
-                            connectedCells(row + i, column + j);
+                            ConnectedCells(row + i, column + j);
                         }
                     }
                     catch (IndexOutOfRangeException)
@@ -357,33 +391,33 @@ namespace praktik_07._04._2023
             }
         }
 
-        public void display()
+        public void Display()
         {
             Console.Clear();
 
-            Console.Write("    ");
+            Console.Write($"&:  ");
+            if(mines - placedFlags <= 9) Console.Write(" ");
+
             for (int i = 0; i < columns; i++)
                 Console.Write((char)(i + 97) + " ");
 
-            Console.WriteLine("\n");
+            Console.WriteLine($"\n{mines - placedFlags}");
 
             for (int i = 0; i < rows; i++)
             {
-                Console.Write(i + 1 + "   ");
+                Console.Write(i + 1 + "  ");
+                if (i < 9) Console.Write(" ");
+
                 for (int j = 0; j < columns; j++)
                 {
-                    //if (field[i, j].bombed) Console.Write("*");
-                    //else if (field[i, j].surrounded != 0)
-                    //    Console.Write(field[i, j].surrounded);
-                    //else Console.Write(' ');
-                    //Console.Write(" ");
+                    if (int.TryParse(field[i, j].displayed.ToString(), out int number))
+                        Console.ForegroundColor = colors[number];
                     Console.Write(field[i, j].displayed + " ");
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
 
                 Console.WriteLine();
             }
         }
-
-
     }
 }
